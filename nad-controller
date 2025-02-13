@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+
+#
+# NAD D7050 Streaming Amp Controller
+# A way to control the device when there
+# is no remote control and the app is crap
+#
+# Feel free to use it, change it and tweak it.
+#
+# Copyright (c) 2025 jontas@gmx.com
+# This file is licensed under the MIT License. See LICENSE for details.
+#
+
+import tkinter as tk
+from tkinter import ttk, messagebox
+import socket
+from selector import (
+    turnOn, turnOff,
+    coaxial1, coaxial2, optical1, optical2,
+    computer, airplay, dock, bt,
+    load_last_state, save_last_volume,
+    send
+)
+
+class VolumeController:
+    MIN_DB = -90
+    MAX_DB = 10
+    MAX_RECEIVER_VOLUME = 200
+
+    @classmethod
+    def db_to_receiver_volume(cls, db: int) -> int:
+        db = max(cls.MIN_DB, min(cls.MAX_DB, db))
+        return int((db + abs(cls.MIN_DB)) * cls.MAX_RECEIVER_VOLUME / 100)
+
+    @classmethod
+    def receiver_volume_to_db(cls, receiver_volume: int) -> int:
+        return int(receiver_volume * 100 / cls.MAX_RECEIVER_VOLUME + cls.MIN_DB)
+
+    @classmethod
+    def set_volume(cls, db: int):
+        receiver_volume = cls.db_to_receiver_volume(db)
+        send("00010204" + format(receiver_volume, '02x'))
+        save_last_volume(receiver_volume)
+
+class VolumeSlider(tk.Toplevel):
+    def __init__(self, parent, current_db):
+        super().__init__(parent)
+        self.title("Volume control")
+        self.parent = parent
+        self.db_value = int(round(current_db))
+
+        self.scale = ttk.Scale(
+            self,
+            from_=VolumeController.MIN_DB,
+            to=VolumeController.MAX_DB,
+            value=self.db_value,
+            command=self._update_display,
+            length=400
+        )
+        self.scale.pack(pady=15, padx=20)
+
+        self.value_label = ttk.Label(
+            self,
+            text=f"{self.db_value} dB",
+            font=('Noto Sans', 12))
+        self.value_label.pack(pady=5)
+
+        btn_frame = ttk.Frame(self)
+        btn_frame.pack(pady=10)
+
+        ttk.Button(
+            btn_frame,
+            text="Save",
+            command=self._save_volume).pack(side=tk.LEFT, padx=5)
+        ttk.Button(
+            btn_frame,
+            text="Cancel",
+            command=self.destroy).pack(side=tk.RIGHT, padx=5)
+
+    def _update_display(self, value):
+        self.db_value = int(round(float(value)))
+        self.value_label.config(text=f"{self.db_value} dB")
+
+    def _save_volume(self):
+        try:
+            VolumeController.set_volume(self.db_value)
+            self.parent.volume = VolumeController.db_to_receiver_volume(self.db_value)
+            self.parent._update_status()
+            self.destroy()
+        except (ValueError, socket.error) as e:
+            messagebox.showerror("Error", str(e))
+
+class MainApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("NAD D7050 Controller")
+        self.geometry("300x320") # width/height
+
+        self.input_source, self.volume = self._load_initial_state()
+
+        self._create_widgets()
+        self._update_status()
+
+    def _create_widgets(self):
+        self.status_frame = ttk.LabelFrame(self, text="Device status")
+        self.status_frame.pack(pady=10, padx=10, fill="x")
+
+        self.input_label = ttk.Label(self.status_frame, text="Source: Unknown")
+        self.input_label.pack(anchor="w", padx=5, pady=2)
+
+        self.volume_label = ttk.Label(self.status_frame, text="Volume: -- dB")
+        self.volume_label.pack(anchor="w", padx=5, pady=2)
+
+        self.control_frame = ttk.LabelFrame(self, text="Settings")
+        self.control_frame.pack(pady=10, padx=10, fill="x")
+
+        buttons = [
+            ("Turn on", self._power_on),
+            ("Turn off", self._power_off),
+            ("Volume", self._adjust_volume),
+            ("Input source", self._show_input_selector),
+            ("Quit", self.quit)
+        ]
+
+        for i, (text, cmd) in enumerate(buttons):
+            pady = (10, 3) if text == "Quit" else 2 # Margin top
+            btn = ttk.Button(self.control_frame, text=text, command=cmd)
+            btn.pack(fill="x", padx=5, pady=pady)
+
+    def _load_initial_state(self):
+        state = load_last_state().split(',')
+        return (
+            state[0] if len(state) > 0 else "Unknown",
+            int(state[1]) if len(state) > 1 else 127
+        )
+
+    def _update_status(self):
+        db_volym = VolumeController.receiver_volume_to_db(self.volume)
+        self.input_label.config(text=f"Source: {self.input_source}")
+        self.volume_label.config(text=f"Volume: {db_volym} dB")
+
+    def _power_on(self):
+        try:
+            turnOn()
+            messagebox.showinfo("Status", "Device on")
+        except socket.error as e:
+            messagebox.showerror("Error", f"Unable to connect: {e}")
+
+    def _power_off(self):
+        try:
+            turnOff()
+            messagebox.showinfo("Status", "Device off")
+        except socket.error as e:
+            messagebox.showerror("Error", f"Unable to connect: {e}")
+
+    def _adjust_volume(self):
+        current_db = VolumeController.receiver_volume_to_db(self.volume)
+        VolumeSlider(self, current_db)
+
+    def _show_input_selector(self):
+        selector = InputSelector(self)
+        self.wait_window(selector)
+        if selector.selected_input:
+            self.input_source = selector.selected_input
+            self._update_status()
+
+class InputSelector(tk.Toplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Select source")
+        self.selected_input = None
+
+        inputs = [
+            ("Coaxial 1", coaxial1),
+            ("Coaxial 2", coaxial2),
+            ("Optical 1", optical1),
+            ("Optical 2", optical2),
+            ("Computer", computer),
+            ("Airplay", airplay),
+            ("Dock", dock),
+            ("Bluetooth", bt)
+        ]
+
+        for i, (text, cmd) in enumerate(inputs):
+            pady = (10, 2) if i == 0 else 2  # First button, 10 px margin top.
+            btn = ttk.Button(
+                self,
+                text=text,
+                command=lambda t=text, c=cmd: self._select_input(t, c)
+            )
+            btn.pack(fill="x", pady=pady, padx=0)
+
+        ttk.Button(
+            self,
+            text="Cancel",
+            command=self.destroy).pack(fill="x", padx=10, pady=(15, 10)
+        )
+
+    def _select_input(self, display_name, command):
+        try:
+            command()
+            self.selected_input = display_name
+            self.destroy()
+        except socket.error as e:
+            messagebox.showerror("Error", f"Unable to connect: {e}")
+            self.destroy()
+
+
+if __name__ == "__main__":
+    app = MainApp()
+    app.mainloop()

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=NAD D7050 Controller
+Exec=nad-controller
+Terminal=false
+Type=Application
+Icon=pythonbackend
+Comment=Control your NAD D7050 Streaming Amp from your desktop
+Categories=AudioVideo;Audio;Video;Player;TV;
