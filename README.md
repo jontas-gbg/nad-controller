@@ -11,9 +11,7 @@ For example, it is possible to send a request to the device and get status about
 ## Needed
 You _may_ also need to install the associated widget toolkit packages (e.g. **tk** must also be installed to use `Tkinter`).
 
-### Install dependencies
-
-#### Dependencies
+### Dependencies
 **You probably already have `tk` installed. If not, install it using your package manager.**
 ```sh
 sudo pacman -S tk # Arch
@@ -31,7 +29,7 @@ Open `selector.py` with a text editor and change the variable TCP_IP to the IP a
 ```py
 TCP_IP = '192.168.1.199' # eg. 192.168.0.0/16, 10.0. 0.0/8
 ```
-Run it from terminal with
+#### Run it from terminal with
 ```sh
 ./nad-controller
 ```
@@ -39,8 +37,8 @@ Run it from terminal with
 ```sh
 chmod +x setup.sh && ./setup.sh
 ```
-It'll copy nad-controller to `~/.local/bin` and nad-controller.desktop to `~/.local/share/applications` letting you start the application from your start menu.
-Make sure `~/.local/bin` are in your `$PATH'.
+It'll copy `nad-controller` to `~/.local/bin` and `nad-controller.desktop` to `~/.local/share/applications` letting you start the application from your start menu.
+Make sure `~/.local/bin` are in your `$PATH`.
 
 ---
 Copyright (c) 2025 jontas@gmx.com
