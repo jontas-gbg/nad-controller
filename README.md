@@ -37,9 +37,8 @@ TCP_IP = '192.168.1.199' # eg. 192.168.0.0/16, 10.0. 0.0/8
 ```sh
 chmod +x setup.sh && ./setup.sh
 ```
-It'll copy `nad-controller` to `~/.local/bin` and `nad-controller.desktop` to `~/.local/share/applications` letting you start the application from your start menu.
+It'll copy `nad-controller` to `~/.local/bin` and create a menu item in your app launcher.
 Make sure `~/.local/bin` are in your `$PATH`.
-
 ---
 Copyright (c) 2025 jontas@gmx.com
 This file is licensed under the MIT License. See LICENSE for details.
