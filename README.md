@@ -21,8 +21,8 @@ sudo dnf install python3-tkinter # Fedora
 
 ## Installation
 ```sh
-git clone https://github.com/jontas-gbg/nad-d7050-controller.git
-cd nad-d7050-controller
+git clone https://github.com/jontas-gbg/nad-controller.git
+cd nad-controller
 chmod +x nad-controller
 ```
 Open `selector.py` with a text editor and change the variable TCP_IP to the IP address of your NAD.
