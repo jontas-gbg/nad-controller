@@ -39,6 +39,7 @@ chmod +x setup.sh && ./setup.sh
 ```
 It'll copy `nad-controller` to `~/.local/bin` and create a menu item in your app launcher.
 Make sure `~/.local/bin` are in your `$PATH`.
+
 ---
 Copyright (c) 2025 jontas@gmx.com
 This file is licensed under the MIT License. See LICENSE for details.
