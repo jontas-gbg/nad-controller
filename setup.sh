@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2025 jontas@gmx.com
-# This file is licensed under the MIT License. See LICENSE for details.
+#
+# (c) 2025 jontas@gmx.com
+# This code is licensed under MIT license (see LICENSE for details)
+#
 
-chmod +x nad-controller
+
+if [[ ! -x "$PWD/nad-controller" ]]; then
+  chmod +x "$PWD/nad-controller"
+fi
+
 mkdir -p "$HOME/.local/bin"
-cp $(pwd)/{nad-controller,selector.py} $HOME/.local/bin
+cp "$PWD"/{nad-controller,selector.py} "$HOME/.local/bin"
 
 cat <<EOF > $HOME/.local/share/applications/nad-controller.desktop
 [Desktop Entry]

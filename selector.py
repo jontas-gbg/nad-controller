@@ -1,6 +1,6 @@
 #
-# Copyright (c) 2025 jontas@gmx.com
-# This file is licensed under the MIT License. See LICENSE for details.
+# (c) 2025 jontas@gmx.com
+# This code is licensed under MIT license (see LICENSE for details)
 #
 
 import socket
